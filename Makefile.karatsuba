@@ -1,0 +1,45 @@
+# Makefile para Linux/WSL de la parte de Karatsuba.
+# Uso: make -f Makefile.karatsuba [objetivo]
+# No reemplaza al Makefile de Luis (sintaxis de Windows); ambos conviven.
+
+CXX      ?= g++
+CXXFLAGS ?= -std=c++17 -O2 -Wall -Wextra -pedantic
+CPPFLAGS += -Iinclude
+BUILD    := build
+
+LIB_OBJ := $(BUILD)/aritmetica_decimal.o $(BUILD)/karatsuba.o
+
+.PHONY: all objetos pruebas benchmark ejecutar-pruebas ejecutar-benchmark clean
+
+all: pruebas benchmark
+
+objetos: $(LIB_OBJ)
+
+pruebas: $(BUILD)/test_karatsuba
+
+benchmark: $(BUILD)/benchmark
+
+ejecutar-pruebas: pruebas
+	./$(BUILD)/test_karatsuba
+
+ejecutar-benchmark: benchmark
+	mkdir -p results
+	./$(BUILD)/benchmark
+
+$(BUILD):
+	mkdir -p $(BUILD)
+
+$(BUILD)/aritmetica_decimal.o: src/aritmetica_decimal.cpp include/aritmetica_decimal.hpp | $(BUILD)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+
+$(BUILD)/karatsuba.o: src/karatsuba.cpp include/karatsuba.hpp include/aritmetica_decimal.hpp | $(BUILD)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+
+$(BUILD)/test_karatsuba: tests/test_karatsuba.cpp $(LIB_OBJ) | $(BUILD)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o $@
+
+$(BUILD)/benchmark: bench/benchmark.cpp $(LIB_OBJ) | $(BUILD)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o $@
+
+clean:
+	rm -rf $(BUILD)
