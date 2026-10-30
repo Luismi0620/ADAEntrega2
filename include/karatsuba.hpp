@@ -34,6 +34,13 @@ std::string rellenarIzquierda(const std::string& a, std::size_t longitud);
 std::pair<std::string, std::string> igualarLongitudes(const std::string& a,
                                                       const std::string& b);
 
+#ifdef ADA_CONTAR_PRODUCTOS
+// Contador de productos de un digito del caso base (solo para analisis; se
+// activa compilando con -DADA_CONTAR_PRODUCTOS y no se usa en el benchmark).
+std::size_t productosBaseContados();
+void reiniciarProductosBase();
+#endif
+
 }  // namespace detalle
 
 }  // namespace ada

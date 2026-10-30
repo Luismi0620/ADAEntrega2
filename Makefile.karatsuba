@@ -9,7 +9,8 @@ BUILD    := build
 
 LIB_OBJ := $(BUILD)/aritmetica_decimal.o $(BUILD)/karatsuba.o
 
-.PHONY: all objetos pruebas benchmark ejecutar-pruebas ejecutar-benchmark clean
+.PHONY: all objetos pruebas benchmark conteo ejecutar-pruebas ejecutar-benchmark \
+        ejecutar-conteo clean
 
 all: pruebas benchmark
 
@@ -19,12 +20,19 @@ pruebas: $(BUILD)/test_karatsuba
 
 benchmark: $(BUILD)/benchmark
 
+# Conteo de productos base: usa un objeto aparte compilado con la macro,
+# para que pruebas y benchmark nunca enlacen el contador.
+conteo: $(BUILD)/contar_productos
+
 ejecutar-pruebas: pruebas
 	./$(BUILD)/test_karatsuba
 
 ejecutar-benchmark: benchmark
 	mkdir -p results
 	./$(BUILD)/benchmark
+
+ejecutar-conteo: conteo
+	./$(BUILD)/contar_productos
 
 $(BUILD):
 	mkdir -p $(BUILD)
@@ -40,6 +48,12 @@ $(BUILD)/test_karatsuba: tests/test_karatsuba.cpp $(LIB_OBJ) | $(BUILD)
 
 $(BUILD)/benchmark: bench/benchmark.cpp $(LIB_OBJ) | $(BUILD)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o $@
+
+$(BUILD)/karatsuba_conteo.o: src/karatsuba.cpp include/karatsuba.hpp include/aritmetica_decimal.hpp | $(BUILD)
+	$(CXX) $(CPPFLAGS) -DADA_CONTAR_PRODUCTOS $(CXXFLAGS) -c $< -o $@
+
+$(BUILD)/contar_productos: bench/contar_productos.cpp $(BUILD)/aritmetica_decimal.o $(BUILD)/karatsuba_conteo.o | $(BUILD)
+	$(CXX) $(CPPFLAGS) -DADA_CONTAR_PRODUCTOS $(CXXFLAGS) $^ -o $@
 
 clean:
 	rm -rf $(BUILD)

@@ -27,13 +27,27 @@ std::string ceroSiVacia(const std::string& a) {
     return a.empty() ? "0" : a;
 }
 
+#ifdef ADA_CONTAR_PRODUCTOS
+// Productos de un digito hechos en el caso base. Solo existe al compilar con
+// -DADA_CONTAR_PRODUCTOS; en la compilacion normal no hay variable ni
+// incremento, y el codigo objeto es el mismo que sin contador.
+std::size_t productosBase = 0;
+#endif
+
 // Caso base. Dos digitos se multiplican con int (el producto es a lo sumo
 // 81); eso esta permitido porque solo opera sobre digitos individuales. Si el
 // umbral fuera mayor que 1, se usa el metodo escolar.
 std::string multiplicacionDirecta(const std::string& x, const std::string& y) {
     if (x.size() == 1 && y.size() == 1) {
+#ifdef ADA_CONTAR_PRODUCTOS
+        ++productosBase;
+#endif
         return std::to_string((x[0] - '0') * (y[0] - '0'));
     }
+#ifdef ADA_CONTAR_PRODUCTOS
+    // El metodo escolar hace exactamente |x| * |y| productos de un digito.
+    productosBase += x.size() * y.size();
+#endif
     return multiplicacionClasica(x, y);
 }
 
@@ -114,6 +128,16 @@ std::pair<std::string, std::string> igualarLongitudes(const std::string& a,
     const std::size_t n = siguientePotenciaDe2(std::max(a.size(), b.size()));
     return {rellenarIzquierda(a, n), rellenarIzquierda(b, n)};
 }
+
+#ifdef ADA_CONTAR_PRODUCTOS
+std::size_t productosBaseContados() {
+    return productosBase;
+}
+
+void reiniciarProductosBase() {
+    productosBase = 0;
+}
+#endif
 
 }  // namespace detalle
 
