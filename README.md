@@ -1,11 +1,281 @@
 # Práctica 2 - Multiplicación de Karatsuba
 
-Implementación en C++ de aritmética decimal de longitud arbitraria para la
-práctica de Divide y Vencerás. Esta rama contiene el componente asignado a
-Luis: multiplicación clásica y funciones auxiliares compatibles con la futura
-integración de Karatsuba.
+Práctica 2 de Análisis y Diseño de Algoritmos (EAFIT), sobre Divide y
+Vencerás. Implementa en C++ la multiplicación clásica y la multiplicación de
+Karatsuba sobre enteros no negativos de longitud arbitraria, representados
+como cadenas de dígitos en base 10. Incluye pruebas, conteo de productos,
+medición de tiempos y análisis del punto de cruce entre ambos algoritmos.
 
-## Representación y contratos
+Integrantes y parte que lideró cada uno:
+
+- **Luis Miguel Mira Mejia:** multiplicación clásica, funciones auxiliares de
+  aritmética decimal (`sumar`, `restar`, `desplazar`, `partir`, `normalizar`),
+  programa de consola y sus pruebas.
+- **Emmanuel Castaño Sepúlveda:** multiplicación de Karatsuba (relleno a
+  potencia de 2 y caso base), validación contra la clásica, conteo de
+  productos, benchmark, punto de cruce, gráficas y `Makefile.karatsuba`.
+
+El informe está en `docs/Practica2_Karatsuba_Informe.pdf`. Las notas de uso
+de inteligencia artificial de cada integrante están en `docs/uso_ia_luis.md`
+y `docs/uso_ia_emmanuel.md`.
+
+## Requisitos
+
+- Sistema operativo Linux (probado en Ubuntu 22.04 sobre WSL2).
+- Compilador C++ compatible con C++11 o superior. Todo el código (`src/`,
+  `tests/`, `bench/`) compila sin advertencias con `-std=c++11` y con
+  `-std=c++17`. Probado con g++ 11.4.0; por defecto se compila con
+  `-std=c++17`.
+- GNU Make (probado con 4.3).
+- `python3` (probado con 3.10.12) y matplotlib (probado con 3.5.1) para las
+  gráficas. El análisis solo usa la biblioteca estándar.
+
+Instalación en Ubuntu:
+
+```bash
+sudo apt install -y g++ make python3-matplotlib
+```
+
+Para compilar con otro estándar se sobrescribe `CXXFLAGS`, por ejemplo:
+
+```bash
+make -f Makefile.karatsuba clean
+make -f Makefile.karatsuba ejecutar-todas-pruebas CXXFLAGS="-std=c++11 -O2 -Wall -Wextra -pedantic"
+```
+
+## Ejecución rápida
+
+Todos los comandos se ejecutan desde la raíz del repositorio. El punto de
+entrada oficial es `Makefile.karatsuba`; los binarios se generan en `build/`.
+
+```bash
+make -f Makefile.karatsuba ejecutar-todas-pruebas
+make -f Makefile.karatsuba ejecutar-benchmark ENERGIA="conectado a la corriente"
+make -f Makefile.karatsuba analisis
+```
+
+Aviso: ejecutar-benchmark, ejecutar-benchmark-umbrales, ejecutar-conteo y analisis sobrescriben results/; los datos del informe corresponden a la corrida del 2026-10-30. Para restaurarlos: git restore results/
+
+- `ejecutar-todas-pruebas`: compila y ejecuta las pruebas de la clásica y
+  luego las de Karatsuba. Termina con error si alguna falla. Debe mostrar
+  `Todas las pruebas de aritmetica decimal pasaron.`, luego los 31 casos
+  `PASS` de Karatsuba y, al final, `Resumen: 31 de 31 casos pasaron.`
+- `ejecutar-benchmark`: mide tiempos (entre 10 y 15 s) y sobrescribe
+  `results/tiempos.csv`, `results/benchmark_salida.txt` y
+  `results/entorno.txt`. `ENERGIA` declara el estado de energía del equipo
+  en `results/entorno.txt`; si se omite, queda `no declarado`.
+- `analisis`: recalcula el análisis y las gráficas a partir de los CSV de
+  `results/`.
+
+Antes de medir conviene ejecutar `make -f Makefile.karatsuba clean`: en
+carpetas de Windows montadas en WSL (`/mnt/c`), `make` puede detectar desfase
+de reloj y omitir recompilaciones.
+
+## Comandos por código
+
+Todos los comandos se ejecutan desde la raíz del repositorio. Cada comando
+`g++` es equivalente al objetivo de `make` de la misma sección; los de esta
+sección escriben en `build/`, que se crea con:
+
+```bash
+mkdir -p build
+```
+
+### Multiplicación clásica y funciones auxiliares (Luis)
+
+**Programa de consola** (`src/main.cpp`). Multiplica con la clásica los dos
+enteros dados como argumentos e imprime solo el producto normalizado. Genera
+`build/clasica`.
+
+```bash
+make -f Makefile.karatsuba programa-clasica
+./build/clasica 12345 6789
+```
+
+Equivalente con `g++`:
+
+```bash
+g++ -std=c++17 -O2 -Wall -Wextra -pedantic -Iinclude src/main.cpp src/aritmetica_decimal.cpp -o build/clasica
+./build/clasica 12345 6789
+```
+
+Salida esperada: `83810205`.
+
+**Pruebas** (`tests/test_aritmetica_decimal.cpp`). Usan `assert`: si una
+falla, el programa aborta con un código distinto de cero. Generan
+`build/test_aritmetica_decimal`.
+
+```bash
+make -f Makefile.karatsuba ejecutar-pruebas-clasica
+```
+
+Equivalente con `g++`:
+
+```bash
+g++ -std=c++17 -O2 -Wall -Wextra -pedantic -Iinclude tests/test_aritmetica_decimal.cpp src/aritmetica_decimal.cpp -o build/test_aritmetica_decimal
+./build/test_aritmetica_decimal
+```
+
+Salida esperada: `Todas las pruebas de aritmetica decimal pasaron.`
+
+`make -f Makefile.karatsuba pruebas-clasica` solo compila las pruebas, sin
+ejecutarlas.
+
+### Karatsuba (Emmanuel)
+
+**Pruebas** (`tests/test_karatsuba.cpp`, umbral del caso base 1). 31 casos;
+imprime `PASS` o `FAIL` por caso y retorna distinto de cero si alguno falla.
+Genera `build/test_karatsuba`.
+
+```bash
+make -f Makefile.karatsuba ejecutar-pruebas
+```
+
+Equivalente con `g++`:
+
+```bash
+g++ -std=c++17 -O2 -Wall -Wextra -pedantic -Iinclude tests/test_karatsuba.cpp src/karatsuba.cpp src/aritmetica_decimal.cpp -o build/test_karatsuba
+./build/test_karatsuba
+```
+
+Salida esperada (última línea): `Resumen: 31 de 31 casos pasaron.`
+
+**Pruebas por umbral.** Las mismas pruebas con el caso base resuelto por la
+clásica por debajo de 16, 32 y 64 dígitos. Generan
+`build/test_karatsuba_u16`, `build/test_karatsuba_u32` y
+`build/test_karatsuba_u64`, y muestran solo los fallos y el resumen.
+
+```bash
+make -f Makefile.karatsuba ejecutar-pruebas-umbrales
+```
+
+Equivalente con `g++` para un umbral (16):
+
+```bash
+g++ -std=c++17 -O2 -Wall -Wextra -pedantic -Iinclude -DADA_UMBRAL_CASO_BASE=16 tests/test_karatsuba.cpp src/karatsuba.cpp src/aritmetica_decimal.cpp -o build/test_karatsuba_u16
+./build/test_karatsuba_u16
+```
+
+Salida esperada: `== umbral 16`, `== umbral 32` y `== umbral 64`, cada uno
+seguido de `Resumen: 31 de 31 casos pasaron.`
+
+**Conteo de productos del caso base** (`bench/contar_productos.cpp`, n = 2
+a 1024). Se compila con `-DADA_CONTAR_PRODUCTOS` en un objeto aparte, para
+que pruebas y benchmark nunca enlacen el contador. Genera
+`build/contar_productos` y sobrescribe `results/conteo_productos.txt`.
+
+```bash
+make -f Makefile.karatsuba ejecutar-conteo | tee results/conteo_productos.txt
+```
+
+Equivalente con `g++` (no escribe en `results/`):
+
+```bash
+g++ -std=c++17 -O2 -Wall -Wextra -pedantic -Iinclude -DADA_CONTAR_PRODUCTOS bench/contar_productos.cpp src/karatsuba.cpp src/aritmetica_decimal.cpp -o build/contar_productos
+./build/contar_productos
+```
+
+Salida esperada (última línea): `Productos verificados contra la clasica: si`.
+
+**Benchmark principal** (`bench/benchmark.cpp`, umbral 1). Mide la clásica
+y Karatsuba para cada tamaño (entre 10 y 15 s). Genera `build/benchmark` y
+sobrescribe `results/tiempos.csv`, `results/benchmark_salida.txt` y
+`results/entorno.txt`. `ENERGIA` declara el estado de energía del equipo; no
+se detecta, y si se omite queda `no declarado`.
+
+Aviso: ejecutar-benchmark, ejecutar-benchmark-umbrales, ejecutar-conteo y analisis sobrescriben results/; los datos del informe corresponden a la corrida del 2026-10-30. Para restaurarlos: git restore results/
+
+```bash
+make -f Makefile.karatsuba clean
+make -f Makefile.karatsuba ejecutar-benchmark ENERGIA="conectado a la corriente"
+```
+
+Equivalente con `g++` (escribe el CSV en `build/` y no registra el entorno):
+
+```bash
+g++ -std=c++17 -O2 -Wall -Wextra -pedantic -Iinclude bench/benchmark.cpp src/karatsuba.cpp src/aritmetica_decimal.cpp -o build/benchmark
+./build/benchmark build/tiempos.csv
+```
+
+Salida esperada: una línea `Corrida:` (solo con `make`), la resolución del
+reloj, una fila por tamaño y, al final,
+`Verificacion karatsuba == clasica: todos los tamanos`, `Tiempo total: ...` y
+`CSV: results/tiempos.csv` (con `g++`, `CSV: build/tiempos.csv`).
+
+**Serie por umbral** (umbrales 16, 32 y 64). Genera `build/benchmark_u16`,
+`build/benchmark_u32`, `build/benchmark_u64` y los CSV por umbral en
+`build/`, y sobrescribe `results/tiempos_umbral.csv` (un solo encabezado) y
+`results/benchmark_umbral_salida.txt`.
+
+```bash
+make -f Makefile.karatsuba ejecutar-benchmark-umbrales
+```
+
+Equivalente con `g++` para un umbral (16):
+
+```bash
+g++ -std=c++17 -O2 -Wall -Wextra -pedantic -Iinclude -DADA_UMBRAL_CASO_BASE=16 bench/benchmark.cpp src/karatsuba.cpp src/aritmetica_decimal.cpp -o build/benchmark_u16
+./build/benchmark_u16 build/tiempos_u16.csv
+```
+
+Salida esperada: para cada umbral, la línea `Umbral del caso base de
+karatsuba: <k>`, una fila por tamaño y, al final,
+`Verificacion karatsuba == clasica: todos los tamanos` y
+`CSV: build/tiempos_u<k>.csv`. La serie completa tarda unos 40 s.
+
+**Análisis y gráficas** (`bench/analizar.py` y `bench/graficar.py`). No
+vuelven a medir: leen los CSV y el conteo de `results/`. Sobrescriben
+`results/analisis_cruce.md`, `results/grafica_tiempos.png` y
+`results/grafica_razon.png`.
+
+```bash
+make -f Makefile.karatsuba analisis
+```
+
+Equivalente con `python3`:
+
+```bash
+python3 bench/analizar.py
+python3 bench/graficar.py
+```
+
+Salida esperada: `Escrito results/analisis_cruce.md`,
+`Escrito results/grafica_tiempos.png` y `Escrito results/grafica_razon.png`. `make -f Makefile.karatsuba graficar` solo
+regenera las gráficas.
+
+**Limpieza.** Borra `build/`; no toca `results/`.
+
+```bash
+make -f Makefile.karatsuba clean
+```
+
+## Estructura de archivos
+
+| Archivo o carpeta | Contenido | Parte |
+|---|---|---|
+| `include/aritmetica_decimal.hpp` | Interfaz de la aritmética decimal y de la clásica. | Luis |
+| `src/aritmetica_decimal.cpp` | `normalizar`, `sumar`, `restar`, `desplazar`, `partir` y `multiplicacionClasica`. | Luis |
+| `src/main.cpp` | Programa de consola de la clásica. | Luis |
+| `tests/test_aritmetica_decimal.cpp` | Pruebas de los auxiliares y de la clásica. | Luis |
+| `Makefile` | Makefile original con sintaxis de Windows (no oficial; ver nota al final). | Luis |
+| `include/karatsuba.hpp` | Declaración de `ada::karatsuba` y de los auxiliares de relleno (`ada::detalle`). | Emmanuel |
+| `src/karatsuba.cpp` | Envoltorio público, relleno y núcleo recursivo. | Emmanuel |
+| `tests/test_karatsuba.cpp` | 31 casos: relleno, casos obligatorios, errores, exhaustiva 0..99 x 0..999 y aleatorios con semilla fija. | Emmanuel |
+| `bench/contar_productos.cpp` | Conteo de productos del caso base (requiere `ADA_CONTAR_PRODUCTOS`). | Emmanuel |
+| `bench/benchmark.cpp` | Medición de tiempos con `std::chrono::steady_clock`. | Emmanuel |
+| `bench/registrar_entorno.sh` | Registro del entorno de medición en `results/entorno.txt`. | Emmanuel |
+| `bench/analizar.py` | Pendientes, cruce medido y extrapolado; escribe `results/analisis_cruce.md`. | Emmanuel |
+| `bench/graficar.py` | Gráficas `results/grafica_tiempos.png` y `results/grafica_razon.png`. | Emmanuel |
+| `results/` | Datos medidos, salidas completas, entorno, conteo, análisis, gráficas y repeticiones. | Emmanuel |
+| `Makefile.karatsuba` | Punto de entrada oficial en Linux para todo el proyecto; los binarios van a `build/`. | Emmanuel |
+| `docs/Practica2_Karatsuba_Informe.pdf` | Informe de la práctica. | Ambos |
+| `docs/uso_ia_luis.md` | Notas de uso de IA de Luis. | Luis |
+| `docs/uso_ia_emmanuel.md`, `docs/evidencia/` | Notas de uso de IA de Emmanuel y capturas de evidencia. | Emmanuel |
+| `build/` | Binarios y objetos generados (ignorado por git). | Generado |
+
+## Multiplicación clásica y funciones auxiliares (Luis)
+
+### Representación y contratos
 
 Los enteros no negativos se representan con `std::string` en base 10, con el
 dígito más significativo a la izquierda. Ninguna operación convierte el
@@ -27,110 +297,16 @@ La interfaz pública está en `include/aritmetica_decimal.hpp`:
 Todas las salidas quedan normalizadas: no conservan ceros a la izquierda y el
 cero se representa como `"0"`. Las entradas vacías o no decimales se rechazan.
 
-## Compilación y ejecución
-
-Se requiere un compilador compatible con C++17. Con GNU Make y `g++`:
-
-```bash
-make
-./bin/clasica 12345678901234567890 987654321
-```
-
-Compilación directa (útil en Windows si no se dispone de `make`):
-
-```bash
-g++ -std=c++17 -O2 -Wall -Wextra -Wpedantic -Iinclude src/main.cpp src/aritmetica_decimal.cpp -o clasica
-./clasica 12345 6789
-```
-
-El programa imprime únicamente el producto normalizado. Por ejemplo, la
-última ejecución imprime `83810205`.
-
-## Pruebas
-
-```bash
-make test
-```
-
-O mediante compilación directa:
-
-```bash
-g++ -std=c++17 -O2 -Wall -Wextra -Wpedantic -Iinclude tests/test_aritmetica_decimal.cpp src/aritmetica_decimal.cpp -o pruebas
-./pruebas
-```
+### Pruebas
 
 Las pruebas cubren longitudes distintas, acarreos y préstamos encadenados,
 ceros a la izquierda, ceros intercalados, un producto mayor que los tipos
 nativos y entradas que incumplen las precondiciones.
 
-## Uso de inteligencia artificial
+## Karatsuba, validación y experimentación (Emmanuel)
 
-Se utilizó OpenAI Codex como apoyo para estructurar la implementación, revisar
-casos de borde y redactar documentación. El equipo debe revisar y comprender
-cada decisión, línea de código y explicación antes de la entrega y la defensa
-individual.
-
-## Karatsuba, validación y experimentación
-
-Esta sección documenta la multiplicación de Karatsuba, sus pruebas, el conteo
-de productos, el benchmark y el análisis del punto de cruce. Usa la
-representación y las funciones auxiliares descritas arriba.
-
-### Requisitos
-
-- Linux o WSL (probado en WSL Ubuntu-22.04). El `Makefile` de la sección
-  anterior usa sintaxis de Windows; para esta parte se usa
-  `Makefile.karatsuba`, que es para Linux.
-- `g++` con C++11 o superior. Por defecto se compila con `-std=c++17`; para
-  otro estándar: `make -f Makefile.karatsuba CXXFLAGS="-std=c++11 -O2 -Wall -Wextra -pedantic" ...`.
-- GNU Make.
-- `python3` (solo biblioteca estándar para el análisis) y matplotlib para las
-  gráficas: `sudo apt install python3-matplotlib` o `pip install matplotlib`.
-
-### Estructura
-
-| Archivo o carpeta | Contenido |
-|---|---|
-| `include/karatsuba.hpp` | Declaración de `ada::karatsuba` y de los auxiliares de relleno (`ada::detalle`). |
-| `src/karatsuba.cpp` | Envoltorio público, relleno y núcleo recursivo. |
-| `tests/test_karatsuba.cpp` | 31 casos: relleno, casos obligatorios, errores, exhaustiva 0..99 x 0..999 y aleatorios con semilla fija. |
-| `bench/contar_productos.cpp` | Conteo de productos del caso base (requiere `ADA_CONTAR_PRODUCTOS`). |
-| `bench/benchmark.cpp` | Medición de tiempos con `std::chrono::steady_clock`. |
-| `bench/registrar_entorno.sh` | Registro del entorno de medición en `results/entorno.txt`. |
-| `bench/analizar.py` | Pendientes, cruce medido y extrapolado; escribe `results/analisis_cruce.md`. |
-| `bench/graficar.py` | Gráficas `results/grafica_tiempos.png` y `results/grafica_razon.png`. |
-| `results/` | Datos medidos, salidas completas, entorno, análisis y gráficas. |
-| `Makefile.karatsuba` | Compilación y ejecución en Linux; los binarios van a `build/`. |
-
-### Comandos
-
-Todos se ejecutan desde la raíz del repositorio.
-
-```bash
-# Pruebas con umbral 1 (31 casos; retorna distinto de cero si alguno falla)
-make -f Makefile.karatsuba ejecutar-pruebas
-
-# Pruebas con umbrales 16, 32 y 64
-make -f Makefile.karatsuba ejecutar-pruebas-umbrales
-
-# Conteo de productos del caso base (n = 2..1024)
-make -f Makefile.karatsuba ejecutar-conteo | tee results/conteo_productos.txt
-
-# Benchmark principal, umbral 1 (escribe tiempos.csv, benchmark_salida.txt y entorno.txt)
-make -f Makefile.karatsuba clean
-make -f Makefile.karatsuba ejecutar-benchmark ENERGIA="conectado a la corriente (declarado por el usuario)"
-
-# Serie complementaria por umbral (escribe tiempos_umbral.csv y benchmark_umbral_salida.txt)
-make -f Makefile.karatsuba ejecutar-benchmark-umbrales
-
-# Análisis y gráficas a partir de los CSV de results/
-make -f Makefile.karatsuba analisis
-```
-
-Antes de medir conviene ejecutar `make -f Makefile.karatsuba clean`: en
-carpetas de Windows montadas en WSL (`/mnt/c`), `make` puede detectar desfase
-de reloj y omitir recompilaciones. Durante la medición, el equipo debe estar
-conectado a la corriente, sin suspenderse y sin aplicaciones pesadas abiertas.
+Usa la representación y las funciones auxiliares descritas en la sección
+anterior.
 
 ### Decisiones de diseño
 
@@ -174,8 +350,38 @@ con el equipo conectado):
   verificación contra la clásica fuera de la región cronometrada, al menos
   50 ms por medición y mediana de 5 mediciones. El detalle está en
   `results/entorno.txt`.
+- Durante la medición, el equipo debe estar conectado a la corriente, sin
+  suspenderse y sin aplicaciones pesadas abiertas.
 - `results/repeticion_principal/` y `results/repeticion_umbral/` contienen
   repeticiones de ambas series como evidencia de reproducibilidad.
 - `results/fase6_bateria/` contiene una corrida anterior con un estado de
   energía más lento (inferido, no registrado). Solo ilustra el efecto del
   entorno y no se usa para las conclusiones.
+
+## Uso de inteligencia artificial
+
+Se utilizó OpenAI Codex como apoyo para estructurar la implementación, revisar
+casos de borde y redactar documentación. El equipo debe revisar y comprender
+cada decisión, línea de código y explicación antes de la entrega y la defensa
+individual.
+
+El detalle por integrante está en `docs/uso_ia_luis.md` (OpenAI Codex) y
+`docs/uso_ia_emmanuel.md` (Claude y Claude Code).
+
+## Nota sobre el Makefile original
+
+El archivo `Makefile` usa sintaxis de Windows (`cmd`: `if not exist`,
+`rmdir /s /q`) y genera los binarios en `bin/`. No es el punto de entrada
+oficial: en Linux sus objetivos fallan, y se usa `Makefile.karatsuba`. Sus
+comandos se conservan aquí solo como referencia, **no oficiales y no
+verificados en Linux**:
+
+```text
+make
+./bin/clasica 12345678901234567890 987654321
+make test
+```
+
+Las compilaciones directas originales, que dejaban los binarios en la raíz
+del repositorio, quedan sustituidas por los comandos `g++` de la sección
+"Comandos por código", que escriben en `build/`.
