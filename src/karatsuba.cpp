@@ -12,9 +12,15 @@ namespace ada {
 namespace {
 
 // Umbral del caso base: si el operando mas largo tiene a lo sumo esta
-// cantidad de digitos, se multiplica directamente. Con 1, el caso base es el
-// producto de dos digitos.
-constexpr std::size_t kUmbralCasoBase = 1;
+// cantidad de digitos, se multiplica directamente. El valor por defecto es 1
+// (producto de dos digitos); para la serie complementaria del benchmark se
+// fija en compilacion con -DADA_UMBRAL_CASO_BASE=<k>.
+#ifndef ADA_UMBRAL_CASO_BASE
+#define ADA_UMBRAL_CASO_BASE 1
+#endif
+static_assert(ADA_UMBRAL_CASO_BASE >= 1,
+              "ADA_UMBRAL_CASO_BASE debe ser al menos 1");
+constexpr std::size_t kUmbralCasoBase = ADA_UMBRAL_CASO_BASE;
 
 // Verdadero si el texto representa el cero ("0", "000") o esta vacio.
 bool esCero(const std::string& a) {
@@ -35,8 +41,13 @@ std::size_t productosBase = 0;
 #endif
 
 // Caso base. Dos digitos se multiplican con int (el producto es a lo sumo
-// 81); eso esta permitido porque solo opera sobre digitos individuales. Si el
-// umbral fuera mayor que 1, se usa el metodo escolar.
+// 81); eso esta permitido porque solo opera sobre digitos individuales.
+// Con umbral mayor que 1 se usa multiplicacionClasica de Luis. Es legal: el
+// enunciado permite como caso base "1 digito o un tamano que el grupo
+// justifique", y la clasica opera digito a digito, sin convertir el numero
+// completo a un tipo nativo. La justificacion del tamano es experimental:
+// por debajo del umbral, el costo fijo por llamada de la recursion (copias y
+// normalizaciones de cadenas) supera el ahorro de un producto.
 std::string multiplicacionDirecta(const std::string& x, const std::string& y) {
     if (x.size() == 1 && y.size() == 1) {
 #ifdef ADA_CONTAR_PRODUCTOS
