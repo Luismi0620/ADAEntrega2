@@ -1,0 +1,21 @@
+Resolucion steady_clock: minima 42 ns, mediana 53 ns (periodo declarado 1/1000000000 s)
+Semilla 20261101, 5 mediciones por algoritmo, minimo 50 ms por medicion
+
+digitos     clasica_ns      reps    karatsuba_ns      reps  kar/clas
+2                231.2    223350          2124.6     39006     9.190
+4                491.1     93092         11768.1      4332    23.963
+8                822.4     46478         32271.1      1088    39.239
+16              2516.0     20284         68983.6       756    27.418
+32              9696.1      5211        257513.1       211    26.558
+64             37176.7      1299        874603.7        62    23.526
+128           147812.4       358       2645109.0        23    17.895
+256           596330.6        77       9498630.5         8    15.928
+512          2367487.8        20      25171296.5         2    10.632
+1024         9364204.5         6      67609279.0         1     7.220
+2048        37246046.0         2     198064252.0         1     5.318
+4096       153956586.0         1     643705038.0         1     4.181
+
+Checksum: 9618774981314663706
+Verificacion karatsuba == clasica: todos los tamanos
+Tiempo total: 15.1 s
+CSV: results/tiempos.csv

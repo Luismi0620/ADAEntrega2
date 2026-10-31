@@ -1,0 +1,12 @@
+Fecha: 2026-10-30 23:06:37 -0500
+Corrida: 2026-10-30 23:06:27 -0500
+Compilador: g++ (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0
+Banderas: -Iinclude -std=c++17 -O2 -Wall -Wextra -pedantic
+Distribucion WSL: Ubuntu-22.04
+Sistema: Ubuntu 22.04.5 LTS
+Kernel: 6.6.87.2-microsoft-standard-WSL2
+CPU: AMD Ryzen 7 7730U with Radeon Graphics
+Nucleos logicos: 16
+Estado de energia: conectado a la corriente (declarado por el usuario)
+Resolucion steady_clock: minima 21 ns, mediana 32 ns (periodo declarado 1/1000000000 s)
+Tiempo total: 10.0 s

@@ -1,0 +1,67 @@
+Corrida: 2026-10-30 23:02:05 -0500
+Resolucion steady_clock: minima 21 ns, mediana 21 ns (periodo declarado 1/1000000000 s)
+Semilla 20261101, 5 mediciones por algoritmo, minimo 50 ms por medicion
+Umbral del caso base de karatsuba: 16 digitos
+
+digitos     clasica_ns      reps    karatsuba_ns      reps  kar/clas
+2                 95.1    571953           162.3    319312     1.706
+4                164.3    336382           237.7    229672     1.447
+8                341.6    148279           410.2    123593     1.201
+16              1169.5     42958          1325.7     38010     1.134
+32              4290.9     11604          6718.8      7155     1.566
+64             17196.7      2911         24498.6      2072     1.425
+128            68943.4       731         77298.9       660     1.121
+256           277561.7       182        255400.6       197     0.920
+512          1099124.2        46        807230.5        63     0.734
+1024         4429677.3        12       2576515.4        20     0.582
+2048        17704439.3         3       7745371.3         7     0.437
+4096        68979866.0         1      22755237.7         3     0.330
+
+Checksum: 15778414927160324192
+Verificacion karatsuba == clasica: todos los tamanos
+Tiempo total: 7.9 s
+CSV: build/tiempos_u16.csv
+Resolucion steady_clock: minima 21 ns, mediana 22 ns (periodo declarado 1/1000000000 s)
+Semilla 20261101, 5 mediciones por algoritmo, minimo 50 ms por medicion
+Umbral del caso base de karatsuba: 32 digitos
+
+digitos     clasica_ns      reps    karatsuba_ns      reps  kar/clas
+2                 87.8    538052           155.6    304815     1.772
+4                178.7    247347           308.0    167615     1.724
+8                333.5    151089           402.1    125197     1.206
+16              1158.5     43869          1312.2     37936     1.133
+32              4212.3     11853          4326.8     11301     1.027
+64             16739.6      3013         17308.5      2940     1.034
+128            68006.7       694         56989.1       882     0.838
+256           273978.5       183        188195.3       266     0.687
+512          1079898.5        47        592893.7        86     0.549
+1024         4387664.4        12       1920581.1        26     0.438
+2048        17148430.3         3       5728296.1         8     0.334
+4096        68995033.0         1      17565633.7         3     0.255
+
+Checksum: 1792811983421002857
+Verificacion karatsuba == clasica: todos los tamanos
+Tiempo total: 9.0 s
+CSV: build/tiempos_u32.csv
+Resolucion steady_clock: minima 21 ns, mediana 32 ns (periodo declarado 1/1000000000 s)
+Semilla 20261101, 5 mediciones por algoritmo, minimo 50 ms por medicion
+Umbral del caso base de karatsuba: 64 digitos
+
+digitos     clasica_ns      reps    karatsuba_ns      reps  kar/clas
+2                 92.3    524012           160.3    304320     1.737
+4                172.1    305499           299.0    212491     1.737
+8                342.1    146574           426.2    121965     1.246
+16              1267.8     43204          1502.7     37705     1.185
+32              4252.8     11434          4443.1     10812     1.045
+64             17344.4      2777         17384.7      2782     1.002
+128            68389.8       716         56740.9       857     0.830
+256           276112.9       185        177446.8       276     0.643
+512          1082299.9        46        555184.9        92     0.513
+1024         4337581.9        12       1766582.5        29     0.407
+2048        17532758.7         3       5424465.7        10     0.309
+4096        69053137.0         1      16443989.5         4     0.238
+
+Checksum: 6148981381637880804
+Verificacion karatsuba == clasica: todos los tamanos
+Tiempo total: 9.1 s
+CSV: build/tiempos_u64.csv
