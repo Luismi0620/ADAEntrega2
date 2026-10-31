@@ -2,6 +2,10 @@
 # Uso: make -f Makefile.karatsuba [objetivo]
 # No reemplaza al Makefile de Luis (sintaxis de Windows); ambos conviven.
 
+# bash con pipefail: si el benchmark falla, tee no oculta el codigo de error.
+SHELL       := /bin/bash
+.SHELLFLAGS := -o pipefail -c
+
 CXX      ?= g++
 CXXFLAGS ?= -std=c++17 -O2 -Wall -Wextra -pedantic
 CPPFLAGS += -Iinclude
@@ -9,8 +13,16 @@ BUILD    := build
 
 LIB_OBJ := $(BUILD)/aritmetica_decimal.o $(BUILD)/karatsuba.o
 
+# Umbrales de la serie complementaria (caso base con la clasica de Luis).
+UMBRALES := 16 32 64
+
 .PHONY: all objetos pruebas benchmark conteo ejecutar-pruebas ejecutar-benchmark \
-        ejecutar-conteo clean
+        ejecutar-conteo pruebas-umbrales benchmark-umbrales \
+        ejecutar-pruebas-umbrales ejecutar-benchmark-umbrales clean
+
+# Los objetos por umbral salen de reglas de patron encadenadas; sin esto make
+# los borraria como intermedios al terminar.
+.PRECIOUS: $(BUILD)/karatsuba_u%.o
 
 all: pruebas benchmark
 
@@ -27,12 +39,37 @@ conteo: $(BUILD)/contar_productos
 ejecutar-pruebas: pruebas
 	./$(BUILD)/test_karatsuba
 
+# Escribe results/tiempos.csv, guarda la salida completa y registra el
+# entorno (compilador, banderas, distribucion, CPU, resolucion del reloj).
 ejecutar-benchmark: benchmark
 	mkdir -p results
-	./$(BUILD)/benchmark
+	./$(BUILD)/benchmark results/tiempos.csv | tee results/benchmark_salida.txt
+	bash bench/registrar_entorno.sh "$(CXX)" "$(CPPFLAGS) $(CXXFLAGS)" \
+	    results/benchmark_salida.txt > results/entorno.txt
 
 ejecutar-conteo: conteo
 	./$(BUILD)/contar_productos
+
+# Serie complementaria: pruebas y benchmark con cada umbral de UMBRALES.
+pruebas-umbrales: $(addprefix $(BUILD)/test_karatsuba_u,$(UMBRALES))
+
+benchmark-umbrales: $(addprefix $(BUILD)/benchmark_u,$(UMBRALES))
+
+ejecutar-pruebas-umbrales: pruebas-umbrales
+	for u in $(UMBRALES); do \
+	    echo "== umbral $$u"; \
+	    ./$(BUILD)/test_karatsuba_u$$u | grep -E 'FAIL|Resumen' || exit 1; \
+	done
+
+# Une los CSV por umbral en results/tiempos_umbral.csv (un solo encabezado).
+ejecutar-benchmark-umbrales: benchmark-umbrales
+	mkdir -p results
+	for u in $(UMBRALES); do \
+	    ./$(BUILD)/benchmark_u$$u $(BUILD)/tiempos_u$$u.csv || exit 1; \
+	done | tee results/benchmark_umbral_salida.txt
+	head -n 1 $(BUILD)/tiempos_u$(firstword $(UMBRALES)).csv > results/tiempos_umbral.csv
+	for u in $(UMBRALES); do tail -n +2 $(BUILD)/tiempos_u$$u.csv; done \
+	    >> results/tiempos_umbral.csv
 
 $(BUILD):
 	mkdir -p $(BUILD)
@@ -54,6 +91,15 @@ $(BUILD)/karatsuba_conteo.o: src/karatsuba.cpp include/karatsuba.hpp include/ari
 
 $(BUILD)/contar_productos: bench/contar_productos.cpp $(BUILD)/aritmetica_decimal.o $(BUILD)/karatsuba_conteo.o | $(BUILD)
 	$(CXX) $(CPPFLAGS) -DADA_CONTAR_PRODUCTOS $(CXXFLAGS) $^ -o $@
+
+$(BUILD)/karatsuba_u%.o: src/karatsuba.cpp include/karatsuba.hpp include/aritmetica_decimal.hpp | $(BUILD)
+	$(CXX) $(CPPFLAGS) -DADA_UMBRAL_CASO_BASE=$* $(CXXFLAGS) -c $< -o $@
+
+$(BUILD)/test_karatsuba_u%: tests/test_karatsuba.cpp $(BUILD)/aritmetica_decimal.o $(BUILD)/karatsuba_u%.o | $(BUILD)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o $@
+
+$(BUILD)/benchmark_u%: bench/benchmark.cpp $(BUILD)/aritmetica_decimal.o $(BUILD)/karatsuba_u%.o | $(BUILD)
+	$(CXX) $(CPPFLAGS) -DADA_UMBRAL_CASO_BASE=$* $(CXXFLAGS) $^ -o $@
 
 clean:
 	rm -rf $(BUILD)
