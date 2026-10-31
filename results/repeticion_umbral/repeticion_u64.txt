@@ -1,0 +1,22 @@
+Resolucion steady_clock: minima 21 ns, mediana 32 ns (periodo declarado 1/1000000000 s)
+Semilla 20261101, 5 mediciones por algoritmo, minimo 50 ms por medicion
+Umbral del caso base de karatsuba: 64 digitos
+
+digitos     clasica_ns      reps    karatsuba_ns      reps  kar/clas
+2                 98.4    547391           170.9    297623     1.737
+4                165.8    327137           236.8    220474     1.428
+8                340.1    134596           412.6    119995     1.213
+16              1182.3     43019          1321.2     38439     1.117
+32              4425.2     11168          4534.3     11175     1.025
+64             17508.3      2494         17795.4      2499     1.016
+128            71991.1       722         59891.8       887     0.832
+256           285068.3       174        185439.4       259     0.651
+512          1155245.8        44        594585.1        85     0.515
+1024         4614776.8        11       1879642.0        27     0.407
+2048        18422294.3         3       5739940.8        10     0.312
+4096        72929084.0         1      17278218.0         3     0.237
+
+Checksum: 4623747778071277076
+Verificacion karatsuba == clasica: todos los tamanos
+Tiempo total: 8.6 s
+CSV: build/repeticion_u64.csv

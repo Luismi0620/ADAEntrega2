@@ -1,0 +1,21 @@
+g++ -Iinclude -DADA_CONTAR_PRODUCTOS -std=c++17 -O2 -Wall -Wextra -pedantic -c src/karatsuba.cpp -o build/karatsuba_conteo.o
+g++ -Iinclude -DADA_CONTAR_PRODUCTOS -std=c++17 -O2 -Wall -Wextra -pedantic bench/contar_productos.cpp build/aritmetica_decimal.o build/karatsuba_conteo.o -o build/contar_productos
+./build/contar_productos
+Productos base de karatsuba (umbral 1), semilla 20261101
+
+n          n^1.585        nueves     razon     aleatoria     razon
+2                3             5     1.667             3     1.000
+4                9            18     2.000            13     1.444
+8               27            59     2.185            45     1.667
+16              81           185     2.284           109     1.346
+32             243           567     2.333           372     1.531
+64             729          1718     2.357          1138     1.561
+128           2187          5177     2.367          3264     1.492
+256           6561         15561     2.372          9828     1.498
+512          19683         46720     2.374         29760     1.512
+1024         59049        140201     2.374         89269     1.512
+
+Pendiente log-log (regresion), teorica 1.5850:
+  nueves:    1.6279
+  aleatoria: 1.6185
+Productos verificados contra la clasica: si
