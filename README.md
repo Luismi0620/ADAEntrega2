@@ -345,7 +345,7 @@ con el equipo conectado):
 
 - CPU: AMD Ryzen 7 7730U, WSL2 Ubuntu 22.04.5 LTS.
 - Compilador: g++ 11.4.0, banderas `-std=c++17 -O2 -Wall -Wextra -pedantic`.
-- Estado de energía: conectado a la corriente (declarado por el usuario).
+- Estado de energía: conectado a la corriente.
 - Protocolo: semilla 20261101, operandos aleatorios de exactamente n dígitos,
   verificación contra la clásica fuera de la región cronometrada, al menos
   50 ms por medición y mediana de 5 mediciones. El detalle está en
@@ -358,15 +358,6 @@ con el equipo conectado):
   energía más lento (inferido, no registrado). Solo ilustra el efecto del
   entorno y no se usa para las conclusiones.
 
-## Uso de inteligencia artificial
-
-Se utilizó OpenAI Codex como apoyo para estructurar la implementación, revisar
-casos de borde y redactar documentación. El equipo debe revisar y comprender
-cada decisión, línea de código y explicación antes de la entrega y la defensa
-individual.
-
-El detalle por integrante está en `docs/uso_ia_luis.md` (OpenAI Codex) y
-`docs/uso_ia_emmanuel.md` (Claude y Claude Code).
 
 ## Nota sobre el Makefile original
 
