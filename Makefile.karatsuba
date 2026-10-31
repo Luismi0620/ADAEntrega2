@@ -23,7 +23,8 @@ UMBRALES := 16 32 64
 
 .PHONY: all objetos pruebas benchmark conteo ejecutar-pruebas ejecutar-benchmark \
         ejecutar-conteo pruebas-umbrales benchmark-umbrales \
-        ejecutar-pruebas-umbrales ejecutar-benchmark-umbrales clean
+        ejecutar-pruebas-umbrales ejecutar-benchmark-umbrales graficar analisis \
+        clean
 
 # Los objetos por umbral salen de reglas de patron encadenadas; sin esto make
 # los borraria como intermedios al terminar.
@@ -107,6 +108,15 @@ $(BUILD)/test_karatsuba_u%: tests/test_karatsuba.cpp $(BUILD)/aritmetica_decimal
 
 $(BUILD)/benchmark_u%: bench/benchmark.cpp $(BUILD)/aritmetica_decimal.o $(BUILD)/karatsuba_u%.o | $(BUILD)
 	$(CXX) $(CPPFLAGS) -DADA_UMBRAL_CASO_BASE=$* $(CXXFLAGS) $^ -o $@
+
+# Analisis y graficas a partir de los CSV ya medidos en results/ (no vuelven
+# a ejecutar el benchmark). graficar requiere matplotlib.
+graficar:
+	python3 bench/graficar.py
+
+analisis:
+	python3 bench/analizar.py
+	python3 bench/graficar.py
 
 clean:
 	rm -rf $(BUILD)
