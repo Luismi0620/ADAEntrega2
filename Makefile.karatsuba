@@ -1,4 +1,5 @@
-# Makefile para Linux/WSL de la parte de Karatsuba.
+# Makefile para Linux/WSL: punto de entrada oficial de todo el proyecto
+# (multiplicacion clasica de Luis y Karatsuba de Emmanuel).
 # Uso: make -f Makefile.karatsuba [objetivo]
 # No reemplaza al Makefile de Luis (sintaxis de Windows); ambos conviven.
 
@@ -13,8 +14,8 @@ BUILD    := build
 
 # Estado de energia del equipo durante la medicion (no se detecta; lo declara
 # quien ejecuta). Ejemplo: make -f Makefile.karatsuba ejecutar-benchmark \
-#     ENERGIA="bateria, modo ahorro (declarado por el usuario)"
-ENERGIA  ?= conectado a la corriente (declarado por el usuario)
+#     ENERGIA="conectado a la corriente"
+ENERGIA  ?= no declarado
 
 LIB_OBJ := $(BUILD)/aritmetica_decimal.o $(BUILD)/karatsuba.o
 
@@ -43,6 +44,21 @@ benchmark: $(BUILD)/benchmark
 conteo: $(BUILD)/contar_productos
 
 ejecutar-pruebas: pruebas
+	./$(BUILD)/test_karatsuba
+
+# Parte de Luis: programa de consola (src/main.cpp) y sus pruebas
+# (tests/test_aritmetica_decimal.cpp), con los binarios en build/.
+programa-clasica: $(BUILD)/clasica
+
+pruebas-clasica: $(BUILD)/test_aritmetica_decimal
+
+ejecutar-pruebas-clasica: pruebas-clasica
+	./$(BUILD)/test_aritmetica_decimal
+
+# Pruebas de Luis y luego las de Karatsuba; make se detiene con error en la
+# primera que falle.
+ejecutar-todas-pruebas: pruebas-clasica pruebas
+	./$(BUILD)/test_aritmetica_decimal
 	./$(BUILD)/test_karatsuba
 
 # Escribe results/tiempos.csv, guarda la salida completa y registra el
@@ -87,6 +103,12 @@ $(BUILD)/aritmetica_decimal.o: src/aritmetica_decimal.cpp include/aritmetica_dec
 
 $(BUILD)/karatsuba.o: src/karatsuba.cpp include/karatsuba.hpp include/aritmetica_decimal.hpp | $(BUILD)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+
+$(BUILD)/clasica: src/main.cpp $(BUILD)/aritmetica_decimal.o | $(BUILD)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o $@
+
+$(BUILD)/test_aritmetica_decimal: tests/test_aritmetica_decimal.cpp $(BUILD)/aritmetica_decimal.o | $(BUILD)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o $@
 
 $(BUILD)/test_karatsuba: tests/test_karatsuba.cpp $(LIB_OBJ) | $(BUILD)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o $@
